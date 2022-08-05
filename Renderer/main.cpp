@@ -290,6 +290,21 @@ hittable_list final_scene() {
 	return objects;
 }
 
+hittable_list hdr_scene()
+{
+	hittable_list world;
+
+	//world.add(make_shared<rect>(point3(-250., -3., -250.), vec3(500., .0, .0), vec3(.0, .0, 500.), make_shared<lambertian>(make_shared<noise_texture>(5.))));
+	world.add(make_shared<xz_rect>(-1000., 1000., -1000., 1000., -3., make_shared<lambertian>(make_shared<noise_texture>(.333))));
+
+	world.add(make_shared<sphere>(point3(.0, .0, 5.), .5, make_shared<dielectric>(color(1.), 1.5)));
+	world.add(make_shared<sphere>(point3(0), 3., make_shared<diffuse_light>(color(1., 1., .85), 5.)));
+	world.add(make_shared<sphere>(point3(-4., .0, .0), 3., make_shared<lambertian>(color(.255, .412, .882))));
+	world.add(make_shared<sphere>(point3(4., .0, .0), 3., make_shared<metal>(color(.196, .804, .196), .5)));
+
+	return world;
+}
+
 class task
 {
 public:
@@ -330,7 +345,7 @@ int main()
 	const double aspect_ratio = 16.0 / 9.0;
 	const int image_width = 1920;
 	const int image_height = static_cast<int>(image_width / aspect_ratio);
-	const int samples_per_pixel = 3840;
+	const int samples_per_pixel = 2560;
 	const int max_depth = 32;
 
 	//Render Variables
@@ -353,7 +368,7 @@ int main()
 
 	//World
 	hittable_list world;
-	switch (4)
+	switch (0)
 	{
 	case 1:
 		world = random_scene();
@@ -401,13 +416,22 @@ int main()
 		vfov = 40.0;
 		dist_to_focus = (lookat - lookfrom).length();
 		break;
-	default:
 	case 7:
 		world = final_scene();
 		background = color(0, 0, 0);
 		lookfrom = point3(478, 278, -600);
 		lookat = point3(278, 278, 0);
 		vfov = 40.0;
+		dist_to_focus = (lookat - lookfrom).length();
+		break;
+	default:
+	case 8:
+		world = hdr_scene();
+		background = color(.1);
+		lookfrom = point3(-10., 0.01, 20.);
+		lookat = point3(.0);
+		vfov = 30.0;
+		aperture = .1;
 		dist_to_focus = (lookat - lookfrom).length();
 		break;
 	}
@@ -436,6 +460,7 @@ int main()
 	//	write_status(startTime, image_height - j, image_height);
 	//}
 
+	//Starting threads
 	thread progress_thread(report_status, &report, startTime, &thread_progress, image_width * image_height);
 	for (int i = 0; i < number_of_threads; i++)
 	{
@@ -444,6 +469,7 @@ int main()
 		tasks.push_back(t);
 	}
 
+	//Wait for threads to finish
 	for (thread& t : threads)
 	{
 		if (t.joinable())
@@ -451,10 +477,10 @@ int main()
 			t.join();
 		}
 	}
-
 	report.store(false);
 	write_status(startTime, 1, 1);
 
+	//Constract final image
 	for (auto t : tasks)
 	{
 		for (int i = t->id, pointer = 0; i < image_width * image_height; i += number_of_threads)
@@ -469,7 +495,7 @@ int main()
 		}
 	}
 
-	//Save Bitmap
+	//Save bitmap
 	CHAR mypicturespath[MAX_PATH];
 	SHGetFolderPath(NULL, CSIDL_MYPICTURES, NULL, SHGFP_TYPE_CURRENT, mypicturespath);
 	string picPath(mypicturespath);

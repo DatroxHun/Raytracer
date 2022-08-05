@@ -135,7 +135,12 @@ inline vec3 operator*(const vec3& v, double t)
 
 inline vec3 operator/(const vec3& v, double t)
 {
-	return (1 / t) * v;
+	return (1.0 / t) * v;
+}
+
+inline vec3 operator/(const vec3& u, const vec3& v)
+{
+	return vec3(u.e[0] / v.e[0], u.e[1] / v.e[1], u.e[2] / v.e[2]);
 }
 
 inline double dot(const vec3& u, const vec3& v)
@@ -192,6 +197,15 @@ inline vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) //only
 	vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
 	vec3 r_out_paralell = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
 	return r_out_perp + r_out_paralell;
+}
+
+inline vec3 clamp(vec3 v, double min, double max)
+{
+	v.e[0] = clamp(v.e[0], min, max);
+	v.e[1] = clamp(v.e[1], min, max);
+	v.e[2] = clamp(v.e[2], min, max);
+
+	return v;
 }
 
 #endif
