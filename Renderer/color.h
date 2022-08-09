@@ -62,19 +62,18 @@ void ACESnarkowicz(color& x)
 }
 
 //Gamma correction
-void gamma_correction(color& c)
+void gamma_correction(color& c, double g = 2.)
 {
-	c.e[0] = sqrt(c.e[0]);
-	c.e[1] = sqrt(c.e[1]);
-	c.e[2] = sqrt(c.e[2]);
+	c.e[0] = pow(c.e[0], 1. / g);
+	c.e[1] = pow(c.e[1], 1. / g);;
+	c.e[2] = pow(c.e[2], 1. / g);;
 }
 
 //Read/Write into buffer
-void write_color(std::ostream& out, color pixel_color, int samples_per_pixel) //old -> don't use it
+void write_color(std::ostream& out, color pixel_color, int samples_per_pixel) //old: for ppm format -> don't use it
 {
 	pixel_color /= samples_per_pixel;
 
-	//the sqrt()s are there for gamma correction where gamma = 2.0
 	out << static_cast<int>(256 * clamp(sqrt(pixel_color.x()), 0.0, .999)) << ' '
 		<< static_cast<int>(256 * clamp(sqrt(pixel_color.y()), 0.0, .999)) << ' '
 		<< static_cast<int>(256 * clamp(sqrt(pixel_color.z()), 0.0, .999)) << '\n';
@@ -83,8 +82,10 @@ void write_color(std::ostream& out, color pixel_color, int samples_per_pixel) //
 void write_color(BYTE* buffer, int i, color pixel_color, int samples_per_pixel)
 {
 	pixel_color /= samples_per_pixel;
+
+	//Post-Processing Effects
 	ACESpro(pixel_color);
-	gamma_correction(pixel_color);
+	gamma_correction(pixel_color, 2.2);
 
 	buffer[i + 0] = static_cast<BYTE>(256 * pixel_color.z());
 	buffer[i + 1] = static_cast<BYTE>(256 * pixel_color.y());
